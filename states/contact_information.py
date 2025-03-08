@@ -5,8 +5,9 @@ from telebot.handler_backends import State, StatesGroup
 # 4. Город
 # 5. Номер телефона
 class UserInfoState(StatesGroup):
-    name = State()
-    age = State()
-    country = State()
     city = State()
-    phone_number = State()
+    local = State()
+    date_checkin = State()
+    date_checkout = State()
+    low_price = State()
+    high_price = State()

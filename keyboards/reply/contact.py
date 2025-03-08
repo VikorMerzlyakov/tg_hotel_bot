@@ -1,6 +1,8 @@
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
-def request_contact() -> ReplyKeyboardMarkup:
-    keyboards = ReplyKeyboardMarkup(True, True)
-    keyboards.add(KeyboardButton('Отправить контакт', request_contact=True))
+def request_location() -> ReplyKeyboardMarkup:
+    keyboards = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    keyboards.add(KeyboardButton("Центр города"))
+    keyboards.add(KeyboardButton("Окраина"))
+    keyboards.add(KeyboardButton("Аэропорт"))
     return keyboards

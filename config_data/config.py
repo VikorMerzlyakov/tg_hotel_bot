@@ -13,6 +13,7 @@ RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 URL_DEST = os.getenv("URL_DEST")
 URL_PHOTO = os.getenv("URL_PHOTO")
 URL_HOTEL = os.getenv("URL_HOTEL")
+URL_DETAILS = os.getenv("URL_DETAILS")
 HEADERS = {
     "x-rapidapi-key": RAPID_API_KEY,
     "x-rapidapi-host": X_RAPIDAPI_HOST

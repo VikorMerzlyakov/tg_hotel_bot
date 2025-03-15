@@ -1,34 +1,32 @@
+from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
+
 from keyboards.reply.contact import request_location
 from loader import bot
 from states.contact_information import UserInfoState
-from telebot.types import Message
-from datetime import datetime
+from telebot.types import Message, CallbackQuery
+from datetime import datetime, timedelta
 
-#city = State()
-#local = State()
-#date_checkin = State()
-#date_checkout = State()
-#low_price = State()
-#high_price = State()
-
-
+# Команда /survey для начала опроса
 @bot.message_handler(commands=['survey'])
 def survey(message: Message) -> None:
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
     bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город для поиска отеля')
 
+# Обработчик для получения города
 @bot.message_handler(state=UserInfoState.city)
 def get_city(message: Message) -> None:
     if message.text.isalpha():
-        bot.send_message(message.from_user.id, 'Спасибо, записал. Теперь уточните локацию.',
-                     reply_markup=request_location())
+        bot.send_message(
+            message.from_user.id,
+            'Спасибо, записал. Теперь уточните локацию.',
+            reply_markup=request_location()
+        )
         bot.set_state(message.from_user.id, UserInfoState.local, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['city'] = message.text
     else:
-        bot.send_message(message.from_user.id, 'Название города может содержать только буквы')
-
+        bot.send_message(message.from_user.id, 'Название города может содержать только буквы.')
 
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.local)
@@ -36,63 +34,96 @@ def get_local(message: Message) -> None:
     if message.text in ["Центр города", "Окраина", "Аэропорт"]:
         bot.send_message(
             message.from_user.id,
-            'Спасибо, записал. Теперь введите дату заселения в формате ДД.ММ.ГГГГ.'
+            'Спасибо, записал. Теперь выберите дату заезда.'
         )
         bot.set_state(message.from_user.id, UserInfoState.date_checkin, message.chat.id)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['local'] = message.text
+
+        # Отправляем календарь для выбора даты заезда
+        calendar, step = DetailedTelegramCalendar(min_date=datetime.now().date()).build()
+        bot.send_message(
+            message.chat.id,
+            f"Выберите дату заезда: {LSTEP[step]}",
+            reply_markup=calendar
+        )
     else:
         bot.send_message(message.from_user.id, 'Пожалуйста, выберите локацию из предложенных вариантов.')
 
-@bot.message_handler(state=UserInfoState.date_checkin)
-def get_date_checkin(message: Message) -> None:
-    try:
-        # Проверяем формат даты
-        check_in_date = datetime.strptime(message.text.strip(), "%d.%m.%Y")
-        if check_in_date < datetime.now():
-            raise ValueError("Дата заезда не может быть в прошлом.")
+# Обработка callback-запроса для даты заезда
+@bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkin)
+def process_date_checkin(call: CallbackQuery):
+    result, key, step = DetailedTelegramCalendar(min_date=datetime.now().date()).process(call.data)
 
-        bot.send_message(
-            message.from_user.id,
-            'Спасибо, записал. Теперь введите дату выселения в формате ДД.ММ.ГГГГ.'
+    if not result and key:
+        bot.edit_message_text(
+            f"Выберите дату заезда: {LSTEP[step]}",
+            call.message.chat.id,
+            call.message.message_id,
+            reply_markup=key
         )
-        bot.set_state(message.from_user.id, UserInfoState.date_checkout, message.chat.id)
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['date_checkin'] = check_in_date.strftime("%d.%m.%Y")  # Сохраняем в удобном формате
-    except ValueError:
-        bot.send_message(
-            message.from_user.id,
-            'Неверный формат даты или дата в прошлом. Введите дату заезда в формате ДД.ММ.ГГГГ.'
+    elif result:
+        bot.edit_message_text(
+            f"Вы выбрали дату заезда: {result.strftime('%d.%m.%Y')}",
+            call.message.chat.id,
+            call.message.message_id
         )
 
-@bot.message_handler(state=UserInfoState.date_checkout)
-def get_date_checkout(message: Message) -> None:
-    try:
-        # Проверяем формат даты
-        check_out_date = datetime.strptime(message.text.strip(), "%d.%m.%Y")
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            check_in_date = datetime.strptime(data['date_checkin'], "%d.%m.%Y")
-
-        if check_out_date <= check_in_date:
-            raise ValueError("Дата выселения должна быть позже даты заезда.")
-
-        bot.send_message(message.from_user.id, 'Спасибо, записал. Теперь введите минимальную цену.')
-        bot.set_state(message.from_user.id, UserInfoState.low_price, message.chat.id)
-
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['date_checkout'] = check_out_date.strftime("%d.%m.%Y")  # Сохраняем в удобном формате
-    except ValueError as e:
         bot.send_message(
-            message.from_user.id,
-            f'Ошибка: {e}. Введите дату выселения в формате ДД.ММ.ГГГГ.'
+            call.message.chat.id,
+            'Теперь выберите дату выселения.'
         )
+
+        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            data['date_checkin'] = result.strftime("%d.%m.%Y")
+
+        bot.set_state(call.from_user.id, UserInfoState.date_checkout, call.message.chat.id)
+
+        # Отправляем календарь для выбора даты выселения
+        check_in_date = result  # result уже datetime.date
+        calendar, step = DetailedTelegramCalendar(min_date=check_in_date + timedelta(days=1)).build()
+        bot.send_message(
+            call.message.chat.id,
+            'Выберите дату выселения.',
+            reply_markup=calendar
+        )
+
+# Обработка callback-запроса для даты выселения
+@bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkout)
+def process_date_checkout(call: CallbackQuery):
+    with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+        check_in_date = datetime.strptime(data['date_checkin'], "%d.%m.%Y").date()
+
+    result, key, step = DetailedTelegramCalendar(min_date=check_in_date + timedelta(days=1)).process(call.data)
+
+    if not result and key:
+        bot.edit_message_text(
+            f"Выберите дату выселения: {LSTEP[step]}",
+            call.message.chat.id,
+            call.message.message_id,
+            reply_markup=key
+        )
+    elif result:
+        bot.edit_message_text(
+            f"Вы выбрали дату выселения: {result.strftime('%d.%m.%Y')}",
+            call.message.chat.id,
+            call.message.message_id
+        )
+
+        bot.send_message(
+            call.message.chat.id,
+            'Спасибо, записал. Теперь введите минимальную цену.'
+        )
+
+        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            data['date_checkout'] = result.strftime("%d.%m.%Y")
+
+        bot.set_state(call.from_user.id, UserInfoState.low_price, call.message.chat.id)
 
 
 @bot.message_handler(state=UserInfoState.low_price)
 def get_low_price(message: Message) -> None:
-    # Проверяем, что введено число
     if message.text.isdigit():
         low_price = int(message.text)
 
@@ -104,17 +135,14 @@ def get_low_price(message: Message) -> None:
     else:
         bot.send_message(message.from_user.id, 'Ошибка: минимальная цена должна быть числом. Попробуйте снова.')
 
-
 @bot.message_handler(state=UserInfoState.high_price)
 def get_high_price(message: Message) -> None:
-    # Проверяем, что введено число
     if message.text.isdigit():
         high_price = int(message.text)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             low_price = data.get('low_price')
 
-            # Проверяем, что максимальная цена больше минимальной
             if high_price > low_price:
                 data['high_price'] = high_price
 
@@ -128,6 +156,22 @@ def get_high_price(message: Message) -> None:
                     f'Максимальная цена: {data["high_price"]}'
                 )
                 bot.send_message(message.from_user.id, text)
+
+                from database.utils.CRUD import CRUDInterface
+                crud = CRUDInterface()
+                store_data = crud.create()
+
+                store_data({
+                    'user_id': message.from_user.id,
+                    'username': message.from_user.username,
+                    'city': data['city'],
+                    'location': data['local'],
+                    'check_in_date': data['date_checkin'],
+                    'check_out_date': data['date_checkout'],
+                    'low_price': data['low_price'],
+                    'high_price': data['high_price']
+                })
+
                 bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
             else:
                 bot.send_message(

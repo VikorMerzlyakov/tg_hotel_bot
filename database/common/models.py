@@ -1,17 +1,34 @@
 from datetime import datetime
 
-import peewee as pw
+from peewee import Model, CharField, IntegerField, DateTimeField, TextField, SqliteDatabase, ForeignKeyField
 
-db = pw.SqliteDatabase('diplom_bot.db')
+db = SqliteDatabase('history.db')  # Имя файла базы данных
 
-
-class ModelBase(pw.Model):
-    created_at = pw.DateField(default=datetime.now())
-
-    class Meta():
+class BaseModel(Model):
+    class Meta:
         database = db
 
 
-class History(ModelBase):
-    number = pw.TextField()
-    message = pw.TextField()
+class User(BaseModel):
+    """
+    Класс для хранения данных о пользователе.
+    """
+    id = IntegerField(primary_key=True)  # Уникальный ID пользователя в базе данных
+    first_name = CharField(null=True)   # Имя пользователя
+    last_name = CharField(null=True)    # Фамилия пользователя
+    id_tg = IntegerField(unique=True)   # Telegram ID пользователя (уникальное значение)
+
+    class Meta:
+        table_name = 'users'
+
+class History(BaseModel):
+    id_his = IntegerField()
+    username = CharField(null=True)  # Имя пользователя
+    city = CharField()  # Город
+    location = CharField()  # Локация
+    photo = TextField(null=True)  # Поле для хранения фото - URL
+    created_at = DateTimeField(default=datetime.now)  # Время создания записи
+    user = ForeignKeyField(User, field='id', backref='histories', null=True)  # Связь с таблицей User
+
+    class Meta:
+        table_name = 'history'

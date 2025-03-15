@@ -6,16 +6,22 @@ if not find_dotenv():
 else:
     load_dotenv()
 
-X_RAPIDAPI_HOST = os.getenv("X-RAPIDAPI-HOST")
-URL = os.getenv("URL")
-ID = os.getenv("ID")
+
+X_RAPIDAPI_HOST = os.getenv("X_RAPIDAPI_HOST")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY")
+URL_DEST = os.getenv("URL_DEST")
+URL_PHOTO = os.getenv("URL_PHOTO")
+URL_HOTEL = os.getenv("URL_HOTEL")
+HEADERS = {
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": X_RAPIDAPI_HOST
+}
+
 DEFAULT_COMMANDS = (
     ("start", "Запустить бота"),
     ("help", "Вывести справку"),
     ('survey', 'Опрос'),
-    ('history', 'История запросов')
 )
 
 

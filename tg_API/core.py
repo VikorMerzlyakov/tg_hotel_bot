@@ -1,17 +1,18 @@
-import os
 from dotenv import load_dotenv
 import requests
+from config_data.config import URL, RAPID_API_KEY, ID, X_RAPIDAPI_HOST
+
 
 load_dotenv()
 
-url = "https://booking-com15.p.rapidapi.com/api/v1/attraction/getAttractionReviews"
+url = URL
 
-querystring = {"id": "PR6K7ZswbGBs", "page": "1"}
+querystring = {"id": ID, "page": "1"}
 
 
 headers = {
-    "x-rapidapi-key": os.getenv("SITE_API"),
-    "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": X_RAPIDAPI_HOST
 }
 
 

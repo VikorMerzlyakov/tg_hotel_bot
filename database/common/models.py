@@ -1,5 +1,5 @@
 from datetime import datetime
-from peewee import Model, CharField, IntegerField, DateTimeField, TextField, SqliteDatabase, ForeignKeyField
+from peewee import Model, CharField, IntegerField, DateTimeField, TextField, SqliteDatabase, ForeignKeyField, AutoField
 
 db = SqliteDatabase('history.db')  # Имя файла базы данных
 
@@ -8,7 +8,7 @@ class BaseModel(Model):
         database = db
 
 class User(BaseModel):
-    id = IntegerField(primary_key=True)
+    id = AutoField(primary_key=True)
     first_name = CharField(null=True)
     last_name = CharField(null=True)
     id_tg = IntegerField(unique=True)
@@ -17,7 +17,7 @@ class User(BaseModel):
         table_name = 'users'
 
 class History(BaseModel):
-    id_his = IntegerField(primary_key=True)
+    id_his = AutoField(primary_key=True)
     username = CharField(null=True)
     city = CharField()
     location = CharField()

@@ -16,3 +16,8 @@ class UserInfoState(StatesGroup):
     date_checkout = State()
     low_price = State()
     high_price = State()
+
+class UserRegister(StatesGroup):
+    first_name = State()
+    last_name = State()
+    id_tg = State()

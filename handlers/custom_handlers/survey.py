@@ -174,6 +174,7 @@ def get_high_price(message: Message) -> None:
                 )
                 bot.send_message(message.from_user.id, text)
 
+                # Сохраняем данные в базу данных
                 from database.utils.CRUD import CRUDInterface
                 crud = CRUDInterface()
                 store_data = crud.create()
@@ -189,7 +190,14 @@ def get_high_price(message: Message) -> None:
                     'high_price': data['high_price']
                 })
 
-                bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
+                # Сбрасываем состояние после завершения опроса
+                bot.delete_state(message.from_user.id, message.chat.id)
+
+                # Предлагаем пользователю продолжить взаимодействие
+                bot.send_message(
+                    message.from_user.id,
+                    'Опрос завершен! Вы можете использовать команду поиска - /search.'
+                )
             else:
                 bot.send_message(
                     message.from_user.id,

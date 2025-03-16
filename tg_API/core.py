@@ -236,15 +236,7 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
                 # Добавляем словарь в список
                 hotels_list.append(hotel_data)
 
-                # Выводим данные об отеле на консоль
-                print(f"Название: {hotel_name}")
-                print(f"Ссылка на бронирование: {booking_url}")
-                print(f"Описание: {description}")
-                print(f"Цена: {price} {currency_code}")
-                print(f"Выбранные даты: {arrival_date} - {departure_date}")
-                print(f"Фотографии: {', '.join(photos[:3])}")  # Показываем первые 3 фото
-                print(f"Координаты: {coordinates}")
-                print("-" * 40)
+
 
             # Возвращаем список словарей
             return hotels_list
@@ -257,7 +249,7 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
         print(f"Произошла ошибка: {e}")
         return []
 
-
+"""
 if __name__ == "__main__":
     city = "Paris"
     arrival = "2025-03-22"
@@ -266,3 +258,4 @@ if __name__ == "__main__":
 
     for hotel in hotels_data:
         print(hotel)
+"""

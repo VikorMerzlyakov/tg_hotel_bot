@@ -1,7 +1,14 @@
 from datetime import datetime
 from peewee import Model, CharField, IntegerField, DateTimeField, TextField, SqliteDatabase, ForeignKeyField, AutoField
+import os
 
-db = SqliteDatabase('history.db')  # Имя файла базы данных
+
+# Определяем корневую директорию проекта
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, '..', 'history.db')  # Поднимаемся на уровень выше
+
+# Создаем единственный экземпляр базы данных
+db = SqliteDatabase(DATABASE_PATH)
 
 class BaseModel(Model):
     class Meta:

@@ -66,6 +66,39 @@ def _retrieve_all_users() -> List[Dict]:
         for record in query
     ]
 
+from typing import List, Dict
+from database.common.models import History
+
+def _retrieve_history_by_tg_id(tg_id: int) -> List[Dict]:
+    """
+    Извлекает записи из таблицы History для пользователя с указанным Telegram ID.
+    :param tg_id: Telegram ID пользователя.
+    :return: Список словарей с данными.
+    """
+    # Запрос к таблице history, где user_id равен tg_id
+    query = (
+        History
+        .select()
+        .where(History.user == tg_id)  # Фильтруем по user_id
+        .order_by(History.created_at.desc())  # Сортируем по дате создания (последние записи первыми)
+    )
+
+    # Преобразуем результаты в список словарей
+    return [
+        {
+            'user_id': record.user_id,
+            'username': record.username,
+            'city': record.city,
+            'location': record.location,
+            'check_in_date': record.check_in_date,
+            'check_out_date': record.check_out_date,
+            'low_price': record.low_price,
+            'high_price': record.high_price,
+            'created_at': record.created_at
+        }
+        for record in query
+    ]
+
 class CRUDInterface:
     @staticmethod
     def create():
@@ -82,6 +115,10 @@ class CRUDInterface:
     @staticmethod
     def retrieve_users():
         return _retrieve_all_users
+
+    @staticmethod
+    def retrieve_history_by_tg_id():
+        return _retrieve_history_by_tg_id
 
 # Создаем экземпляр интерфейса
 crud = CRUDInterface()

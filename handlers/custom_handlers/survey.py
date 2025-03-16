@@ -5,10 +5,27 @@ from loader import bot
 from states.contact_information import UserInfoState
 from telebot.types import Message, CallbackQuery
 from datetime import datetime, timedelta
+from database.core import crud  # Импортируем CRUD для работы с базой данных
 
 # Команда /survey для начала опроса
 @bot.message_handler(commands=['survey'])
 def survey(message: Message) -> None:
+    # Получаем Telegram ID пользователя
+    telegram_id = message.from_user.id
+
+    # Проверяем, зарегистрирован ли пользователь
+    users = crud.retrieve_users()()
+    user = next((u for u in users if u['id_tg'] == telegram_id), None)
+
+    if not user:
+        # Если пользователь не зарегистрирован, предлагаем пройти регистрацию
+        bot.send_message(
+            message.chat.id,
+            "Вы не зарегистрированы. Пожалуйста, пройдите регистрацию, используя команду /register."
+        )
+        return  # Останавливаем обработку команды
+
+    # Если пользователь зарегистрирован, продолжаем обработку
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
     bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город для поиска отеля')
 

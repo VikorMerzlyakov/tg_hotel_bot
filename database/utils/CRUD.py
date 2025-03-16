@@ -1,32 +1,41 @@
-from typing import Dict, List, TypeVar
-
+from typing import Dict, List
 from peewee import ModelSelect
+from database.common.models import History
 
-from database.common.models import ModelBase
-from ..common.models import db
+def _store_data(data: Dict) -> None:
+    History.create(
+        user=data['user_id'],
+        username=data.get('username'),
+        city=data['city'],
+        location=data['location'],
+        check_in_date=data['check_in_date'],
+        check_out_date=data['check_out_date'],
+        low_price=data['low_price'],
+        high_price=data['high_price']
+    )
 
-T = TypeVar("T")
+def _retrieve_all_data() -> List[Dict]:
+    query = History.select()
+    return [
+        {
+            'user_id': record.user_id,
+            'username': record.username,
+            'city': record.city,
+            'location': record.location,
+            'check_in_date': record.check_in_date,
+            'check_out_date': record.check_out_date,
+            'low_price': record.low_price,
+            'high_price': record.high_price,
+            'created_at': record.created_at
+        }
+        for record in query
+    ]
 
-def _store_date(db: db, model: T, *data: List[Dict]) -> None:
-    with db.atonic():
-        model.insert_nany(*data).execute()
-
-def _retrieve_all_data(db: db, model: T, *columns: ModelBase) -> ModelSelect:
-    with db.atonic():
-        response = model.select(*columns)
-
-    return response
-
-class CRUDInterface():
+class CRUDInterface:
     @staticmethod
     def create():
-        return _store_date
+        return _store_data
 
     @staticmethod
-    def retrive():
+    def retrieve():
         return _retrieve_all_data
-
-if __name__=="__main__":
-    _store_date()
-    _retrieve_all_data()
-    CRUDInterface()

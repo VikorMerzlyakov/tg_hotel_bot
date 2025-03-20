@@ -8,4 +8,4 @@ logging.basicConfig(
 )
 
 # Экспортируем объект logger для использования в других файлах
-logger = logging.getLogger(__name__)
+logging = logging.getLogger(__name__)

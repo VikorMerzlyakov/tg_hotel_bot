@@ -4,7 +4,7 @@ from database.common.models import db, History, User  # Модели базы д
 from tg_API.core import display_hotel_info  # Импортируем функцию для работы с API
 import logging
 from datetime import datetime
-from logger import logger
+from logger import logging
 
 
 # Команда /search

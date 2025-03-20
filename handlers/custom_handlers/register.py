@@ -4,7 +4,7 @@ from loader import bot
 from states.contact_information import UserRegister
 from telebot.types import Message
 import logging
-from logger import logger
+from logger import logging
 
 
 @bot.message_handler(commands=['register'])

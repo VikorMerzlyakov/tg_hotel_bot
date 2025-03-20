@@ -7,6 +7,7 @@ from telebot.types import Message, CallbackQuery
 from datetime import datetime, timedelta
 from database.core import crud  # Импортируем CRUD для работы с базой данных
 
+
 # Команда /survey для начала опроса
 @bot.message_handler(commands=['survey'])
 def survey(message: Message) -> None:
@@ -28,6 +29,7 @@ def survey(message: Message) -> None:
     # Если пользователь зарегистрирован, продолжаем обработку
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
     bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город для поиска отеля')
+
 
 # Обработчик для получения города
 @bot.message_handler(state=UserInfoState.city)
@@ -68,6 +70,7 @@ def get_local(message: Message) -> None:
     else:
         bot.send_message(message.from_user.id, 'Пожалуйста, выберите локацию из предложенных вариантов.')
 
+
 # Обработка callback-запроса для даты заезда
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkin)
 def process_date_checkin(call: CallbackQuery):
@@ -105,6 +108,7 @@ def process_date_checkin(call: CallbackQuery):
             'Выберите дату выселения.',
             reply_markup=calendar
         )
+
 
 # Обработка callback-запроса для даты выселения
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkout)
@@ -151,6 +155,7 @@ def get_low_price(message: Message) -> None:
         bot.set_state(message.from_user.id, UserInfoState.high_price, message.chat.id)
     else:
         bot.send_message(message.from_user.id, 'Ошибка: минимальная цена должна быть числом. Попробуйте снова.')
+
 
 @bot.message_handler(state=UserInfoState.high_price)
 def get_high_price(message: Message) -> None:

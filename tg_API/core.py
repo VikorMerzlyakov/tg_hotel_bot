@@ -4,6 +4,8 @@ import requests
 from config_data.config import URL_DEST, X_RAPIDAPI_HOST, RAPID_API_KEY, URL_PHOTO, URL_HOTEL, HEADERS, URL_DETAILS
 
 headers = HEADERS
+
+
 def search_destination(city_name):
     """
     Функция для получения dest_id и search_type по названию города.
@@ -45,7 +47,6 @@ def get_hotel_photos(hotel_id):
 
     querystring = {"hotel_id": hotel_id}
 
-
     try:
         response = requests.get(url, headers=headers, params=querystring)
         if response.status_code == 200:
@@ -62,7 +63,8 @@ def get_hotel_photos(hotel_id):
         return []
 
 
-def get_hotel_details(hotel_id, arrival_date, departure_date, adults=1, children_age="0", room_qty=1, currency_code="USD"):
+def get_hotel_details(hotel_id, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
+                      currency_code="USD"):
     """
     Функция для получения деталей отеля, включая ссылку на бронирование и описание.
 
@@ -127,6 +129,7 @@ def find_booking_url(data: dict) -> str:
 
 from typing import Dict, List
 
+
 def extract_description(data: Dict) -> str:
     """
     Рекурсивная функция для поиска ключа 'top_ufi_benefits' и извлечения значений ключей "translated_name".
@@ -155,7 +158,9 @@ def extract_description(data: Dict) -> str:
     find_translated_names(data)  # Запускаем рекурсивный поиск
     return ", ".join(description)  # Объединяем найденные значения в строку через запятую
 
-def display_hotel_info(city_name, arrival_date, departure_date, adults=1, children_age="0", room_qty=1, currency_code="USD"):
+
+def display_hotel_info(city_name, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
+                       currency_code="USD"):
     """
     Функция для объединения данных из всех функций и сохранения их в список словарей.
 
@@ -218,7 +223,8 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
                 }
 
                 # Получаем детали отеля
-                details = get_hotel_details(hotel_id, arrival_date, departure_date, adults, children_age, room_qty, currency_code)
+                details = get_hotel_details(hotel_id, arrival_date, departure_date, adults, children_age, room_qty,
+                                            currency_code)
                 booking_url = find_booking_url(details)
                 description = extract_description(details)
 
@@ -236,8 +242,6 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
                 # Добавляем словарь в список
                 hotels_list.append(hotel_data)
 
-
-
             # Возвращаем список словарей
             return hotels_list
 
@@ -248,6 +252,7 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
     except Exception as e:
         print(f"Произошла ошибка: {e}")
         return []
+
 
 """
 if __name__ == "__main__":

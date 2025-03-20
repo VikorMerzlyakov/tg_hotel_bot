@@ -12,6 +12,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
+
 # Команда /search
 @bot.message_handler(commands=['search'])
 def search(message):
@@ -80,7 +81,8 @@ def search(message):
             hotels_data = display_hotel_info(city, arrival, departure)
 
             if not hotels_data:
-                logging.warning(f"API не вернул данных для запроса: город={city}, дата заезда={arrival}, дата выезда={departure}")
+                logging.warning(
+                    f"API не вернул данных для запроса: город={city}, дата заезда={arrival}, дата выезда={departure}")
                 bot.send_message(message.chat.id, "По вашему запросу не найдено отелей.")
                 return
 

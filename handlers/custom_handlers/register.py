@@ -12,6 +12,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
+
 @bot.message_handler(commands=['register'])
 def start_survey(message: Message):
     try:
@@ -33,6 +34,7 @@ def start_survey(message: Message):
     except Exception as e:
         logging.error(f"Ошибка при обработке команды /register: {e}")
 
+
 # Обработчик для получения имени
 @bot.message_handler(state=UserRegister.first_name)
 def get_first_name(message: Message):
@@ -53,6 +55,7 @@ def get_first_name(message: Message):
     else:
         logging.warning(f"Пользователь {message.from_user.id} ввел некорректное имя: {message.text}")
         bot.send_message(message.chat.id, "Имя должно содержать только буквы. Попробуйте снова.")
+
 
 # Обработчик для получения фамилии
 @bot.message_handler(state=UserRegister.last_name)

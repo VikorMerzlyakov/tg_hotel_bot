@@ -2,6 +2,7 @@ from typing import Dict, List
 from peewee import ModelSelect
 from database.common.models import History, User
 
+
 def _store_data(data: Dict) -> None:
     """
     Сохраняет данные в таблицу History.
@@ -18,6 +19,7 @@ def _store_data(data: Dict) -> None:
         high_price=data['high_price']
     )
 
+
 def _store_user_data(data: Dict) -> None:
     """
     Сохраняет данные в таблицу User.
@@ -28,6 +30,7 @@ def _store_user_data(data: Dict) -> None:
         last_name=data.get('last_name'),
         id_tg=data['id_tg']  # Telegram ID пользователя
     )
+
 
 def _retrieve_all_data() -> List[Dict]:
     """
@@ -50,6 +53,7 @@ def _retrieve_all_data() -> List[Dict]:
         for record in query
     ]
 
+
 def _retrieve_all_users() -> List[Dict]:
     """
     Извлекает все записи из таблицы User.
@@ -66,8 +70,10 @@ def _retrieve_all_users() -> List[Dict]:
         for record in query
     ]
 
+
 from typing import List, Dict
 from database.common.models import History
+
 
 def _retrieve_history_by_tg_id(tg_id: int) -> List[Dict]:
     """
@@ -99,6 +105,7 @@ def _retrieve_history_by_tg_id(tg_id: int) -> List[Dict]:
         for record in query
     ]
 
+
 class CRUDInterface:
     @staticmethod
     def create():
@@ -119,6 +126,7 @@ class CRUDInterface:
     @staticmethod
     def retrieve_history_by_tg_id():
         return _retrieve_history_by_tg_id
+
 
 # Создаем экземпляр интерфейса
 crud = CRUDInterface()

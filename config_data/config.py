@@ -6,7 +6,6 @@ if not find_dotenv():
 else:
     load_dotenv()
 
-
 X_RAPIDAPI_HOST = os.getenv("X_RAPIDAPI_HOST")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY")
@@ -26,6 +25,3 @@ DEFAULT_COMMANDS = (
     ('survey', 'Опрос о поиске отелей'),
     ('search', 'Поиск')
 )
-
-
-

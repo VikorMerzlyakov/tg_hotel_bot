@@ -2,7 +2,6 @@ from datetime import datetime
 from peewee import Model, CharField, IntegerField, DateTimeField, TextField, SqliteDatabase, ForeignKeyField, AutoField
 import os
 
-
 # Определяем корневую директорию проекта
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_PATH = os.path.join(BASE_DIR, '..', 'history.db')  # Поднимаемся на уровень выше
@@ -10,9 +9,11 @@ DATABASE_PATH = os.path.join(BASE_DIR, '..', 'history.db')  # Поднимаем
 # Создаем единственный экземпляр базы данных
 db = SqliteDatabase(DATABASE_PATH)
 
+
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class User(BaseModel):
     id = AutoField(primary_key=True)
@@ -22,6 +23,7 @@ class User(BaseModel):
 
     class Meta:
         table_name = 'users'
+
 
 class History(BaseModel):
     id_his = AutoField(primary_key=True)

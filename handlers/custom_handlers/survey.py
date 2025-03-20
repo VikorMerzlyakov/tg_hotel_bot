@@ -28,7 +28,7 @@ def survey(message: Message) -> None:
 
     # Если пользователь зарегистрирован, продолжаем обработку
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
-    bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город для поиска отеля')
+    bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город (латинскими буквами) для поиска отеля')
 
 
 # Обработчик для получения города
@@ -134,7 +134,7 @@ def process_date_checkout(call: CallbackQuery):
 
         bot.send_message(
             call.message.chat.id,
-            'Спасибо, записал. Теперь введите минимальную цену.'
+            'Спасибо, записал. Теперь введите минимальную цену(USD).'
         )
 
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:

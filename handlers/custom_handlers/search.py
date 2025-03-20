@@ -4,13 +4,7 @@ from database.common.models import db, History, User  # Модели базы д
 from tg_API.core import display_hotel_info  # Импортируем функцию для работы с API
 import logging
 from datetime import datetime
-
-# Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
+from logger import logger
 
 
 # Команда /search

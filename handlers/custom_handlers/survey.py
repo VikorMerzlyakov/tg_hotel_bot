@@ -1,5 +1,4 @@
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
-
 from keyboards.reply.contact import request_location
 from loader import bot
 from states.contact_information import UserInfoState

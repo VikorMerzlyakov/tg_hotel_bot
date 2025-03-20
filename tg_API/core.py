@@ -1,5 +1,3 @@
-from typing import Dict
-
 import requests
 from config_data.config import URL_DEST, X_RAPIDAPI_HOST, RAPID_API_KEY, URL_PHOTO, URL_HOTEL, HEADERS, URL_DETAILS
 

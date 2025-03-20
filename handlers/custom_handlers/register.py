@@ -4,13 +4,7 @@ from loader import bot
 from states.contact_information import UserRegister
 from telebot.types import Message
 import logging
-
-# Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
+from logger import logger
 
 
 @bot.message_handler(commands=['register'])

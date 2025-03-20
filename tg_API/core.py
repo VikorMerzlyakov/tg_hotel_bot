@@ -254,13 +254,3 @@ def display_hotel_info(city_name, arrival_date, departure_date, adults=1, childr
         return []
 
 
-"""
-if __name__ == "__main__":
-    city = "Paris"
-    arrival = "2025-03-22"
-    departure = "2025-03-28"
-    hotels_data = display_hotel_info(city, arrival, departure)
-
-    for hotel in hotels_data:
-        print(hotel)
-"""

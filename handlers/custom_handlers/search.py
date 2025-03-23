@@ -4,6 +4,7 @@ from database.common.models import db, History, User  # Модели базы д
 from tg_API.core import display_hotel_info  # Импортируем функцию для работы с API
 import logging
 from datetime import datetime
+from telebot.types import InputMediaPhoto  # Для создания медиа-группы
 from logger import logging
 
 
@@ -47,11 +48,9 @@ def search(message):
         history_records = crud.retrieve_history_by_tg_id()(telegram_id)
 
         if not history_records:
-            logging.warning(f"У пользователя {telegram_id} нет записей в истории.")
             bot.send_message(message.chat.id, "У вас нет записей в истории. Пожалуйста, пройдите опрос о поиске отеля.")
         else:
-            logging.info(f"Найдено {len(history_records)} записей в истории для пользователя {telegram_id}.")
-            bot.send_message(message.chat.id, "Запись найдена! Вы уже проходили опрос о поиске отеля.")
+            bot.send_message(message.chat.id, "Запись найдена! Ожидайте ответа от сайта.")
 
             # Получение последней записи из истории
             last_record = history_records[0]
@@ -64,15 +63,18 @@ def search(message):
             arrival = datetime.strptime(check_in_date_str, "%d.%m.%Y").strftime("%Y-%m-%d")
             departure = datetime.strptime(check_out_date_str, "%d.%m.%Y").strftime("%Y-%m-%d")
 
+            price_min = last_record['low_price']
+            price_max= last_record['high_price']
             # Формирование данных для запроса к API
             city = last_record['city']
 
             # Отправка запроса в API
             logging.info(f"Отправка запроса в API: город={city}, дата заезда={arrival}, дата выезда={departure}")
-            hotels_data = display_hotel_info(city, arrival, departure)
-            # Отправка запроса в API
-            logging.info(f"Отправка запроса в API: город={city}, дата заезда={arrival}, дата выезда={departure}")
-            hotels_data = display_hotel_info(city, arrival, departure)
+            hotels_data = display_hotel_info(city, arrival, departure, price_min, price_max)
+
+
+            # Сохраняем данные в БД перед отправкой сообщений
+            crud.save_hotel_info_to_db(telegram_id, hotels_data)
 
             if not hotels_data:
                 logging.warning(
@@ -82,33 +84,35 @@ def search(message):
 
             # Формирование и отправка результата пользователю
             logging.info(f"Получено {len(hotels_data)} отелей от API.")
-            response = "Результаты поиска:\n\n"
             for hotel in hotels_data:
                 # Формируем информацию об отеле
                 hotel_info = (
                     f"Название: {hotel['name']}\n"
-                    f"Ссылка на бронирование: {hotel['booking_url']}\n"
                     f"Описание: {hotel['description']}\n"
                     f"Цена: {hotel['price']}\n"
                     f"Даты заезда/выезда: {hotel['dates']}\n"
                     f"Координаты: {hotel['coordinates']}\n"
                 )
 
-                # Добавляем фотографии, если они есть
+                # Отправляем текстовое сообщение с информацией об отеле
+                #bot.send_message(message.chat.id, hotel_info)
+
                 if hotel['photos']:
-                    hotel_info += "Фотографии:\n"
-                    for photo_url in hotel['photos']:
-                        hotel_info += f"{photo_url}\n"
+                    media_group = []
+                    for i, photo_url in enumerate(hotel['photos']):
+                        # Добавляем уникальный параметр к URL
+                        unique_photo_url = f"{photo_url}&cache_buster={i}"
+
+                        # Добавляем подпись только к первой фотографии
+                        caption = hotel_info if i == 0 else None
+                        media_group.append(InputMediaPhoto(media=unique_photo_url, caption=caption))
+
+                        # Если достигнут лимит в 10 фото, отправляем альбом
+                        if len(media_group) == 10 or i == len(hotel['photos']) - 1:
+                            bot.send_media_group(message.chat.id, media_group)
+                            media_group = []  # Очищаем альбом для следующей группы фото
                 else:
-                    hotel_info += "Фотографии отсутствуют.\n"
-
-                hotel_info += "---\n"
-
-                # Отправляем сообщение пользователю
-                bot.send_message(message.chat.id, hotel_info)
-                response += hotel_info
-
-            bot.send_message(message.chat.id, response)
+                    bot.send_message(message.chat.id, "Фотографии отсутствуют.\n")
 
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")

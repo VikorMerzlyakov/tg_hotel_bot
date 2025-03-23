@@ -28,6 +28,7 @@ class User(BaseModel):
 class History(BaseModel):
     id_his = AutoField(primary_key=True)
     username = CharField(null=True)
+    created_at = DateTimeField(default=datetime.now)
     city = CharField()
     location = CharField()
     check_in_date = CharField()
@@ -35,8 +36,26 @@ class History(BaseModel):
     low_price = CharField()
     high_price = CharField()
     photo = TextField(null=True)
-    created_at = DateTimeField(default=datetime.now)
+
     user = ForeignKeyField(User, field='id', backref='histories', null=True)
 
     class Meta:
         table_name = 'history'
+
+
+class History_search(BaseModel):
+    id_his = AutoField(primary_key=True)
+    user_tg_id = IntegerField(index=True, null=True)  # Добавляем индекс
+    created_at = DateTimeField(default=datetime.now)
+    city = CharField()
+    booking_url= CharField()
+    description= CharField()
+    check_in_date = CharField()
+    check_out_date = CharField()
+    price = CharField()
+    photo = TextField()
+    latitude = CharField()
+    longitude= CharField()
+
+    class Meta:
+        table_name = 'history_search'

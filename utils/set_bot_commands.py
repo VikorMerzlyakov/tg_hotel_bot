@@ -1,5 +1,6 @@
 from telebot.types import BotCommand
 from config_data.config import DEFAULT_COMMANDS
+import handlers.custom_handlers.history
 
 
 def set_default_commands(bot):

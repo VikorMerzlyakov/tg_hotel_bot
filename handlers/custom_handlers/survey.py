@@ -161,8 +161,12 @@ def get_high_price(message: Message) -> None:
     if message.text.isdigit():
         high_price = int(message.text)
 
+        #with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+         #   data['low_price'] = low_price
+
+
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            low_price = data.get('low_price')
+            low_price = data['low_price']
 
             if high_price > low_price:
                 data['high_price'] = high_price
@@ -194,18 +198,21 @@ def get_high_price(message: Message) -> None:
                     'high_price': data['high_price']
                 })
 
-                # Сбрасываем состояние после завершения опроса
-                bot.delete_state(message.from_user.id, message.chat.id)
 
                 # Предлагаем пользователю продолжить взаимодействие
                 bot.send_message(
                     message.from_user.id,
                     'Опрос завершен! Вы можете использовать команду поиска - /search.'
                 )
+
+
+
             else:
                 bot.send_message(
                     message.from_user.id,
                     'Ошибка: максимальная цена должна быть больше минимальной. Попробуйте снова.'
                 )
+        # Сбрасываем состояние после завершения опроса
+        bot.delete_state(message.from_user.id, message.chat.id)
     else:
         bot.send_message(message.from_user.id, 'Ошибка: максимальная цена должна быть числом. Попробуйте снова.')

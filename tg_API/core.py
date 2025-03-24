@@ -272,7 +272,9 @@ if __name__ == "__main__":
     city = "Moskow"
     arrival = "2025-05-23"
     departure = "2025-05-30"
-    hotels_data = display_hotel_info(city, arrival, departure)
+    min = 1000
+    max = 10000
+    hotels_data = display_hotel_info(city, arrival, departure, min, max)
 
     for hotels in hotels_data:
         print(hotels)

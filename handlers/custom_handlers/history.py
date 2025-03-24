@@ -1,7 +1,8 @@
 import logging
 from loader import bot
-from telebot.types import Message, InputMediaPhoto
+from telebot.types import Message, CallbackQuery, InputMediaPhoto
 from database.core import crud  # Импортируем CRUD для работы с базой данных
+from keyboards.reply.contact import create_date_keyboard  # Импортируем клавиатуру
 
 
 # Команда /history для просмотра истории запросов
@@ -32,6 +33,51 @@ def history(message: Message) -> None:
 
         logging.info(f"История запросов успешно получена для пользователя {telegram_id}")
 
+        # Извлекаем уникальные даты из истории
+        unique_dates = sorted(set(entry['created_at'].split(" ")[0] for entry in history_data), reverse=True)
+
+        if not unique_dates:
+            bot.send_message(message.chat.id, "В истории нет записей с датами.")
+            return
+
+        # Отправляем клавиатуру с датами
+        bot.send_message(
+            message.chat.id,
+            "Выберите дату для просмотра истории запросов:",
+            reply_markup=create_date_keyboard(unique_dates)
+        )
+
+    except Exception as e:
+        logging.error(f"Произошла ошибка при обработке команды /history: {e}")
+        bot.send_message(
+            message.chat.id,
+            "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
+        )
+
+
+# Обработчик нажатий на кнопки дат
+@bot.callback_query_handler(func=lambda call: call.data.startswith("history_date:"))
+def handle_date_selection(call: CallbackQuery):
+    """
+    Обрабатывает выбор даты из клавиатуры.
+
+    :param call: CallbackQuery с выбранной датой.
+    """
+    try:
+        selected_date = call.data.split(":")[1]  # Извлекаем выбранную дату
+        telegram_id = call.from_user.id
+
+        logging.info(f"Пользователь {telegram_id} выбрал дату: {selected_date}")
+
+        # Получаем историю запросов за выбранную дату
+        history_data = crud.retrieve_search_history_by_date(telegram_id, selected_date)
+
+        if not history_data:
+            bot.send_message(call.message.chat.id, f"За дату {selected_date} записей не найдено.")
+            return
+
+        logging.info(f"История запросов успешно получена для пользователя {telegram_id} за дату {selected_date}")
+
         # Отправляем каждую запись из истории
         for entry in history_data:
             formatted_entry = format_single_entry(entry)
@@ -53,17 +99,15 @@ def history(message: Message) -> None:
                     else:
                         media_group.append(InputMediaPhoto(photo_url))
 
-                bot.send_media_group(message.chat.id, media_group)
+                bot.send_media_group(call.message.chat.id, media_group)
             else:
                 # Если фотографий нет, отправляем только текстовое сообщение
-                bot.send_message(message.chat.id, formatted_entry)
-
-        logging.info(f"История запросов отправлена пользователю {telegram_id}")
+                bot.send_message(call.message.chat.id, formatted_entry)
 
     except Exception as e:
-        logging.error(f"Произошла ошибка при обработке команды /history: {e}")
+        logging.error(f"Произошла ошибка при обработке выбора даты: {e}")
         bot.send_message(
-            message.chat.id,
+            call.message.chat.id,
             "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
         )
 

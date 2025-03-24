@@ -197,7 +197,44 @@ def _save_hotel_info_to_db(user_tg_id: int, hotels_list: list):
         print(f"Данные успешно сохранены для пользователя с tg_id={user_tg_id}")
     except Exception as e:
         print(f"Произошла ошибка при сохранении данных в БД: {e}")
+def _retrieve_search_history_by_date(user_tg_id: int, date: str) -> List[Dict]:
+    """
+    Извлекает историю запросов для конкретного пользователя за указанную дату.
+    :param user_tg_id: Telegram ID пользователя.
+    :param date: Дата в формате YYYY-MM-DD.
+    :return: Список словарей с данными.
+    """
+    try:
+        # Запрос к таблице history_search с фильтрацией по дате
+        query = History_search.select().where(
+            (History_search.user_tg_id == user_tg_id) &
+            (History_search.created_at.startswith(date))  # Фильтр по дате
+        )
 
+        # Форматирование данных
+        history_data = [
+            {
+                'id_his': record.id_his,
+                'user_tg_id': record.user_tg_id,
+                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'city': record.city,
+                'booking_url': record.booking_url,
+                'description': record.description,
+                'check_in_date': record.check_in_date,
+                'check_out_date': record.check_out_date,
+                'price': record.price,
+                'photo': record.photo.split(", ") if record.photo else [],
+                'latitude': record.latitude,
+                'longitude': record.longitude
+            }
+            for record in query
+        ]
+
+        return history_data
+
+    except Exception as e:
+        print(f"Произошла ошибка при извлечении данных из БД: {e}")
+        return []
 class CRUDInterface:
     @staticmethod
     def create():
@@ -230,6 +267,10 @@ class CRUDInterface:
     @staticmethod
     def retrieve_search_history(user_tg_id: int):
         return _retrieve_search_history(user_tg_id)
+
+    @staticmethod
+    def retrieve_search_history_by_date(user_tg_id: int, date: str):
+        return _retrieve_search_history_by_date(user_tg_id, date)
 
 
 

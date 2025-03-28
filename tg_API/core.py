@@ -219,24 +219,25 @@ def extract_description(data: Dict) -> str:
     return ", ".join(description)  # Объединяем найденные значения в строку через запятую
 
 
-def display_hotel_info(city_name, local, arrival_date, departure_date, price_min, price_max, adults=1, children_age="0", room_qty=1,
-                       currency_code="USD", user_tg_id=None, categories_filter=None):
+def display_hotel_info(city_name, local, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
+                       currency_code="USD", user_tg_id=None, categories_filter=None, sort_by=None, price_min=None, price_max=None):
     """
     Функция для объединения данных из всех функций и сохранения их в список словарей.
-    Добавлен параметр categories_filter для фильтрации по рейтингу гостей.
+    Добавлены необязательные параметры sort_by и цены (price_min, price_max).
 
     :param city_name: Название города.
     :param local: Тип локации (например, "city", "district").
     :param arrival_date: Дата заезда.
     :param departure_date: Дата выезда.
-    :param price_min: Минимальная цена.
-    :param price_max: Максимальная цена.
     :param adults: Количество взрослых.
     :param children_age: Возраст детей.
     :param room_qty: Количество номеров.
     :param currency_code: Валюта.
     :param user_tg_id: Telegram ID пользователя (необходим для записи в БД).
     :param categories_filter: Фильтр для категорий (например, "reviewscorebuckets::80").
+    :param sort_by: Параметр сортировки (например, "price").
+    :param price_min: Минимальная цена (необязательно).
+    :param price_max: Максимальная цена (необязательно).
     :return: Список словарей с данными об отелях.
     """
     # Получаем dest_id и search_type для города
@@ -260,17 +261,25 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, price_min
         "children_age": children_age,
         "room_qty": str(room_qty),
         "page_number": "1",
-        "price_min": price_min,
-        "price_max": price_max,
         "units": "metric",
         "temperature_unit": "c",
         "languagecode": "en-us",
         "currency_code": currency_code
     }
 
-    # Добавляем фильтр, если он указан
+    # Добавляем фильтр по минимальной и максимальной цене, если они указаны
+    if price_min is not None:
+        querystring["price_min"] = price_min
+    if price_max is not None:
+        querystring["price_max"] = price_max
+
+    # Добавляем фильтр по категориям, если он указан
     if categories_filter:
         querystring["categories_filter"] = categories_filter
+
+    # Добавляем параметр сортировки, если он указан
+    if sort_by:
+        querystring["sort_by"] = sort_by
 
     try:
         response = requests.get(url, headers=headers, params=querystring)
@@ -307,7 +316,7 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, price_min
                     "name": hotel_name,
                     "booking_url": booking_url,
                     "description": description,
-                    "price": f"{price} {currency_code}",
+                    "price": f"{price} {currency_code}" if price else "Цена не указана",
                     "dates": f"{arrival_date} - {departure_date}",
                     "photos": photos,  # Добавляем фото
                     "coordinates": coordinates  # Добавляем координаты

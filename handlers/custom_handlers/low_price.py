@@ -6,28 +6,28 @@ import logging
 from database.core import crud
 
 
-# Команда /guest_rating
-@bot.message_handler(commands=['guest_rating'])
-def guest_rating(message):
+# Команда /low_price
+@bot.message_handler(commands=['low_price'])
+def low_price(message):
     """
-    Обработчик команды /guest_rating.
-    Добавляет фильтр по рейтингу гостей (reviewscorebuckets::80) и переадресует запрос в search.py.
+    Обработчик команды /low_price.
+    Добавляет фильтр для сортировки отелей по цене ("sort_by": "price").
     """
     try:
-        logging.info("Получена команда /guest_rating.")
+        logging.info("Получена команда /low_price.")
 
-        # Устанавливаем фильтр для рейтинга гостей
-        categories_filter = "reviewscorebuckets::80"
+        # Устанавливаем фильтр для сортировки по цене
+        sort_by = "price"
 
         # Вызываем обработчик команды /search, передавая дополнительный параметр
-        search_with_filter(message, categories_filter)
+        search_with_filter(message, sort_by=sort_by)
 
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")
         bot.send_message(message.chat.id, "Произошла ошибка при выполнении запроса. Пожалуйста, попробуйте позже.")
 
 
-def search_with_filter(message, categories_filter):
+def search_with_filter(message, sort_by=None):
     """
     Переадресация запроса в search.py с добавлением фильтра.
     """
@@ -63,7 +63,7 @@ def search_with_filter(message, categories_filter):
 
         # Добавляем фильтр в запрос
         hotels_data = display_hotel_info(
-            city, local, arrival, departure, categories_filter=categories_filter
+            city, local, arrival, departure, sort_by=sort_by
         )
 
         # Сохраняем данные в БД и отправляем результат пользователю
@@ -76,11 +76,9 @@ def search_with_filter(message, categories_filter):
 
 def retrieve_history_for_rating(telegram_id):
     """
-    Получение истории запросов для команды /guest_rating.
+    Получение истории запросов для команды /low_price.
     """
     return crud.retrieve_history_by_tg_id()(telegram_id)
-
-
 
 
 def handle_hotel_results(message, hotels_data, telegram_id):

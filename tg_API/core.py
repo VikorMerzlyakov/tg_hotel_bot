@@ -220,18 +220,23 @@ def extract_description(data: Dict) -> str:
 
 
 def display_hotel_info(city_name, local, arrival_date, departure_date, price_min, price_max, adults=1, children_age="0", room_qty=1,
-                       currency_code="USD", user_tg_id=None):
+                       currency_code="USD", user_tg_id=None, categories_filter=None):
     """
     Функция для объединения данных из всех функций и сохранения их в список словарей.
+    Добавлен параметр categories_filter для фильтрации по рейтингу гостей.
 
     :param city_name: Название города.
+    :param local: Тип локации (например, "city", "district").
     :param arrival_date: Дата заезда.
     :param departure_date: Дата выезда.
+    :param price_min: Минимальная цена.
+    :param price_max: Максимальная цена.
     :param adults: Количество взрослых.
     :param children_age: Возраст детей.
     :param room_qty: Количество номеров.
     :param currency_code: Валюта.
     :param user_tg_id: Telegram ID пользователя (необходим для записи в БД).
+    :param categories_filter: Фильтр для категорий (например, "reviewscorebuckets::80").
     :return: Список словарей с данными об отелях.
     """
     # Получаем dest_id и search_type для города
@@ -245,6 +250,7 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, price_min
 
     url = URL_HOTEL
 
+    # Формируем параметры запроса
     querystring = {
         "dest_id": dest_id,
         "search_type": search_type,
@@ -261,6 +267,10 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, price_min
         "languagecode": "en-us",
         "currency_code": currency_code
     }
+
+    # Добавляем фильтр, если он указан
+    if categories_filter:
+        querystring["categories_filter"] = categories_filter
 
     try:
         response = requests.get(url, headers=headers, params=querystring)
@@ -290,7 +300,7 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, price_min
                 description = extract_description(details)
 
                 # Получаем фотографии отеля через функцию get_hotel_photos
-                photos = get_hotel_photos(hotel_id)[:10]  # Показываем первые 3 фото
+                photos = get_hotel_photos(hotel_id)[:10]  # Показываем первые 10 фото
 
                 # Создаем словарь с данными об отеле
                 hotel_data = {

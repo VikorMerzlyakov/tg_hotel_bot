@@ -1,15 +1,17 @@
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def request_location() -> ReplyKeyboardMarkup:
-    keyboards = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    keyboards.add(KeyboardButton("Центр города"))
-    keyboards.add(KeyboardButton("Окраина"))
-    keyboards.add(KeyboardButton("Аэропорт"))
-    return keyboards
+def dynamic_keyboard(options: list) -> ReplyKeyboardMarkup:
+    """
+    Создает динамическую клавиатуру на основе переданных опций.
 
-
-
+    :param options: Список строк (названия кнопок).
+    :return: Клавиатура с динамическими кнопками.
+    """
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    for option in options:
+        keyboard.add(KeyboardButton(option))
+    return keyboard
 
 def create_date_keyboard(dates):
     """

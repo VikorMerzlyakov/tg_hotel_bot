@@ -67,10 +67,11 @@ def search(message):
             price_max= last_record['high_price']
             # Формирование данных для запроса к API
             city = last_record['city']
+            local = last_record['location']
 
             # Отправка запроса в API
             logging.info(f"Отправка запроса в API: город={city}, дата заезда={arrival}, дата выезда={departure}")
-            hotels_data = display_hotel_info(city, arrival, departure, price_min, price_max)
+            hotels_data = display_hotel_info(city, local, arrival, departure, price_min, price_max)
 
 
             # Сохраняем данные в БД перед отправкой сообщений

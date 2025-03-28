@@ -6,37 +6,86 @@ from config_data.config import URL_DEST, URL_PHOTO, URL_HOTEL, HEADERS, URL_DETA
 from typing import Dict
 
 headers = HEADERS
-
-
-def search_destination(city_name):
+def get_destinations(city_name: str) -> list:
     """
-    Функция для получения dest_id и search_type по названию города.
+    Отправляет запрос к API для получения списка dest_id и их типов для указанного города.
+
+    :param city_name: Название города.
+    :return: Список уникальных типов локаций (search_type).
     """
     url = URL_DEST
 
     querystring = {"query": city_name}
 
+    response = requests.get(url, headers=headers, params=querystring)
+
+    if response.status_code == 200:
+        data = response.json()
+        unique_types = set()  # Используем множество для хранения уникальных значений
+
+        # Обрабатываем массив данных
+        for item in data.get("data", []):
+            search_type = item.get("search_type")  # Получаем значение типа локации
+            if search_type:  # Проверяем, что значение существует
+                unique_types.add(search_type)
+
+        return list(unique_types)  # Преобразуем множество обратно в список
+    else:
+        raise Exception(f"Ошибка при запросе к API: {response.status_code}")
+
+import logging
+import requests
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Формат сообщений
+    handlers=[logging.StreamHandler()]  # Вывод логов в консоль
+)
+
+def search_destination_id(city_name: str, local: str):
+    """
+    Функция для получения dest_id по названию города и типу локации (dest_type).
+
+    :param city_name: Название города.
+    :param local: Тип локации (например, "city", "district").
+    :return: Словарь с ключами "dest_id" и "search_type", если найден соответствующий dest_type, иначе None.
+    """
+    url = URL_DEST  # URL для запроса к API
+    querystring = {"query": city_name}
+
     try:
+        logging.info(f"Отправка запроса к API для города '{city_name}'")
         response = requests.get(url, headers=headers, params=querystring)
+
         if response.status_code == 200:
+            logging.debug("Получен ответ от API со статусом 200")
             data = response.json()
             destinations = data.get("data", [])
+
             if not destinations:
-                print(f"Город '{city_name}' не найден.")
+                logging.warning(f"Город '{city_name}' не найден.")
                 return None
 
-            # Извлекаем первый найденный город
-            dest_id = destinations[0].get("dest_id")
-            search_type = destinations[0].get("search_type")
-            print(f"Найден город: {city_name}, dest_id: {dest_id}, search_type: {search_type}")
-            return {"dest_id": dest_id, "search_type": search_type}
+            logging.debug(f"Найдено {len(destinations)} локаций для города '{city_name}'")
+
+            # Ищем dest_id, где dest_type совпадает с local
+            for destination in destinations:
+                dest_type = destination.get("dest_type")
+                if local == dest_type:
+                    dest_id = destination.get("dest_id")
+                    logging.info(f"Найдена локация: {local}, dest_id: {dest_id}")
+                    return {"dest_id": dest_id, "search_type": dest_type}  # Возвращаем словарь
+
+            # Если не найдено совпадений
+            logging.warning(f"Локация '{local}' для города '{city_name}' не найдена.")
+            return None
         else:
-            print(f"Ошибка при запросе к API: {response.status_code}")
+            logging.error(f"Ошибка при запросе к API: {response.status_code}")
             return None
     except Exception as e:
-        print(f"Произошла ошибка: {e}")
+        logging.error(f"Произошла ошибка: {e}")
         return None
-
 
 def get_hotel_photos(hotel_id):
     """
@@ -170,7 +219,7 @@ def extract_description(data: Dict) -> str:
     return ", ".join(description)  # Объединяем найденные значения в строку через запятую
 
 
-def display_hotel_info(city_name, arrival_date, departure_date, price_min, price_max, adults=1, children_age="0", room_qty=1,
+def display_hotel_info(city_name, local, arrival_date, departure_date, price_min, price_max, adults=1, children_age="0", room_qty=1,
                        currency_code="USD", user_tg_id=None):
     """
     Функция для объединения данных из всех функций и сохранения их в список словарей.
@@ -186,7 +235,7 @@ def display_hotel_info(city_name, arrival_date, departure_date, price_min, price
     :return: Список словарей с данными об отелях.
     """
     # Получаем dest_id и search_type для города
-    destination = search_destination(city_name)
+    destination = search_destination_id(city_name, local)
     if not destination:
         print("Не удалось найти информацию о городе.")
         return []
@@ -269,12 +318,13 @@ def display_hotel_info(city_name, arrival_date, departure_date, price_min, price
         return []
 
 if __name__ == "__main__":
-    city = "Moskow"
+    city = "Paris"
+    local = "city"
     arrival = "2025-05-23"
     departure = "2025-05-30"
     min = 1000
     max = 10000
-    hotels_data = display_hotel_info(city, arrival, departure, min, max)
+    hotels_data = display_hotel_info(city, local, arrival, departure, min, max)
 
     for hotels in hotels_data:
         print(hotels)

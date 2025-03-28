@@ -1,11 +1,11 @@
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
-from keyboards.reply.contact import request_location
+from keyboards.reply.contact import dynamic_keyboard
 from loader import bot
 from states.contact_information import UserInfoState
 from telebot.types import Message, CallbackQuery
 from datetime import datetime, timedelta
 from database.core import crud  # Импортируем CRUD для работы с базой данных
-
+from tg_API.core import get_destinations
 
 # Команда /survey для начала опроса
 @bot.message_handler(commands=['survey'])
@@ -32,42 +32,78 @@ def survey(message: Message) -> None:
 
 # Обработчик для получения города
 @bot.message_handler(state=UserInfoState.city)
-def get_city(message: Message) -> None:
-    if message.text.isalpha():
+def get_city(message: Message):
+    """
+    Обработчик ввода названия города.
+    """
+    if not message.text.isalpha():
+        bot.send_message(message.chat.id, "Название города может содержать только буквы.")
+        return
+
+    # Сохраняем название города
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        data["city"] = message.text
+
+    # Получаем список доступных локаций для города
+    city_name = message.text.strip()
+    try:
+        locations = get_destinations(city_name)
+
+        if not locations:
+            bot.send_message(message.chat.id, "Для данного города нет доступных локаций.")
+            return
+
+        # Создаем клавиатуру с доступными локациями
+        keyboard = dynamic_keyboard(locations)
+
+        # Отправляем клавиатуру пользователю
         bot.send_message(
-            message.from_user.id,
-            'Спасибо, записал. Теперь уточните локацию.',
-            reply_markup=request_location()
+            message.chat.id,
+            "Спасибо, записал. Теперь уточните локацию.",
+            reply_markup=keyboard
         )
         bot.set_state(message.from_user.id, UserInfoState.local, message.chat.id)
 
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['city'] = message.text
-    else:
-        bot.send_message(message.from_user.id, 'Название города может содержать только буквы.')
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Произошла ошибка: {e}")
 
 
-@bot.message_handler(content_types=['text'], state=UserInfoState.local)
-def get_local(message: Message) -> None:
-    if message.text in ["Центр города", "Окраина", "Аэропорт"]:
-        bot.send_message(
-            message.from_user.id,
-            'Спасибо, записал. Теперь выберите дату заезда.'
-        )
-        bot.set_state(message.from_user.id, UserInfoState.date_checkin, message.chat.id)
+# Обработчик выбора локации
+@bot.message_handler(state=UserInfoState.local)
+def get_local(message: Message):
+    """
+    Обработчик выбора локации.
+    """
+    # Проверяем, что выбранный текст соответствует одной из локаций
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        city_name = data.get("city")
+        if not city_name:
+            bot.send_message(message.chat.id, "Ошибка: город не был записан.")
+            return
 
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['local'] = message.text
+        # Получаем список доступных локаций для города
+        valid_locations = get_destinations(city_name)
 
-        # Отправляем календарь для выбора даты заезда
-        calendar, step = DetailedTelegramCalendar(min_date=datetime.now().date()).build()
-        bot.send_message(
-            message.chat.id,
-            f"Выберите дату заезда: {LSTEP[step]}",
-            reply_markup=calendar
-        )
-    else:
-        bot.send_message(message.from_user.id, 'Пожалуйста, выберите локацию из предложенных вариантов.')
+    if message.text not in valid_locations:
+        bot.send_message(message.chat.id, "Пожалуйста, выберите локацию из предложенных вариантов.")
+        return
+
+    # Сохраняем выбранную локацию
+    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        data["local"] = message.text
+
+    bot.send_message(message.chat.id, "Спасибо, записал локацию.")
+
+    # Переходим к выбору даты заезда
+    bot.set_state(message.from_user.id, UserInfoState.date_checkin, message.chat.id)
+
+    # Отправляем календарь для выбора даты заезда
+    calendar, step = DetailedTelegramCalendar(min_date=datetime.now().date()).build()
+    bot.send_message(
+        message.chat.id,
+        f"Выберите дату заезда: {LSTEP[step]}",
+        reply_markup=calendar
+    )
 
 
 # Обработка callback-запроса для даты заезда

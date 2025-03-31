@@ -8,13 +8,13 @@ from logger import logging
 
 
 @bot.message_handler(commands=['register'])
-def start_survey(message: Message):
+def startSurvey(message: Message):
     try:
         # Получаем Telegram ID пользователя
         telegram_id = message.from_user.id
 
         # Проверяем, зарегистрирован ли пользователь
-        users = crud.retrieve_users()()
+        users = crud.retrieveUsers()()
         user = next((u for u in users if u['id_tg'] == telegram_id), None)
 
         if user:
@@ -31,7 +31,7 @@ def start_survey(message: Message):
 
 # Обработчик для получения имени
 @bot.message_handler(state=UserRegister.first_name)
-def get_first_name(message: Message):
+def getFirstName(message: Message):
     """
     Получает имя пользователя и запрашивает фамилию.
     """
@@ -53,7 +53,7 @@ def get_first_name(message: Message):
 
 # Обработчик для получения фамилии
 @bot.message_handler(state=UserRegister.last_name)
-def get_last_name(message: Message):
+def getLastName(message: Message):
     """
     Получает фамилию пользователя и сохраняет данные в базу данных.
     """
@@ -87,7 +87,7 @@ def get_last_name(message: Message):
                 'last_name': last_name,
                 'id_tg': telegram_id
             }
-            crud.create_user()(user_data)
+            crud.createUser()(user_data)
 
             logging.info(f"Пользователь успешно зарегистрирован: {user_data}")
             bot.send_message(message.chat.id, f"Вы успешно зарегистрированы! Ваш Telegram ID: {telegram_id}")

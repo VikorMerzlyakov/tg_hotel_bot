@@ -1,8 +1,5 @@
-import logging
 from datetime import datetime
-from typing import Dict, List
-from peewee import ModelSelect, OperationalError
-from database.common.models import History, User, History_search
+from database.common.models import History, User, HistorySearch
 from typing import List, Dict
 from database.common.models import History
 
@@ -106,8 +103,6 @@ def _retrieve_history_by_tg_id(tg_id: int) -> List[Dict]:
     ]
 
 
-
-
 def _retrieve_user_history(user_id: int) -> List[Dict]:
     """
     Извлекает историю запросов для конкретного пользователя.
@@ -143,7 +138,7 @@ def _retrieve_search_history(user_tg_id: int) -> List[Dict]:
     """
     try:
         # Запрос к таблице history_search
-        query = History_search.select().where(History_search.user_tg_id == user_tg_id)
+        query = HistorySearch.select().where(HistorySearch.user_tg_id == user_tg_id)
 
         # Форматирование данных
         history_data = [
@@ -181,7 +176,7 @@ def _save_hotel_info_to_db(user_tg_id: int, hotels_list: list):
     try:
         for hotel in hotels_list:
             # Создаем запись в таблице History_search
-            History_search.create(
+            HistorySearch.create(
                 user_tg_id=user_tg_id,
                 created_at=datetime.now(),
                 city=hotel.get("name", "Unknown City"),
@@ -197,6 +192,8 @@ def _save_hotel_info_to_db(user_tg_id: int, hotels_list: list):
         print(f"Данные успешно сохранены для пользователя с tg_id={user_tg_id}")
     except Exception as e:
         print(f"Произошла ошибка при сохранении данных в БД: {e}")
+
+
 def _retrieve_search_history_by_date(user_tg_id: int, date: str) -> List[Dict]:
     """
     Извлекает историю запросов для конкретного пользователя за указанную дату.
@@ -206,9 +203,9 @@ def _retrieve_search_history_by_date(user_tg_id: int, date: str) -> List[Dict]:
     """
     try:
         # Запрос к таблице history_search с фильтрацией по дате
-        query = History_search.select().where(
-            (History_search.user_tg_id == user_tg_id) &
-            (History_search.created_at.startswith(date))  # Фильтр по дате
+        query = HistorySearch.select().where(
+            (HistorySearch.user_tg_id == user_tg_id) &
+            (HistorySearch.created_at.startswith(date))  # Фильтр по дате
         )
 
         # Форматирование данных
@@ -235,13 +232,15 @@ def _retrieve_search_history_by_date(user_tg_id: int, date: str) -> List[Dict]:
     except Exception as e:
         print(f"Произошла ошибка при извлечении данных из БД: {e}")
         return []
+
+
 class CRUDInterface:
     @staticmethod
     def create():
         return _store_data
 
     @staticmethod
-    def create_user():
+    def createUser():
         return _store_user_data
 
     @staticmethod
@@ -249,55 +248,25 @@ class CRUDInterface:
         return _retrieve_all_data
 
     @staticmethod
-    def retrieve_users():
+    def retrieveUsers():
         return _retrieve_all_users
 
     @staticmethod
-    def retrieve_history_by_tg_id():
+    def retrieveHistoryByTgId():
         return _retrieve_history_by_tg_id
 
     @staticmethod
-    def retrieve_user_history():
+    def retrieveUserHistory():
         return _retrieve_user_history
 
     @staticmethod
-    def save_hotel_info_to_db(user_tg_id: int, hotels_list: list):
+    def saveHotelInfoToDb(user_tg_id: int, hotels_list: list):
         return _save_hotel_info_to_db(user_tg_id, hotels_list)
 
     @staticmethod
-    def retrieve_search_history(user_tg_id: int):
+    def retrieveSearchHistory(user_tg_id: int):
         return _retrieve_search_history(user_tg_id)
 
     @staticmethod
-    def retrieve_search_history_by_date(user_tg_id: int, date: str):
+    def retrieveSearchHistoryByDate(user_tg_id: int, date: str):
         return _retrieve_search_history_by_date(user_tg_id, date)
-
-
-
-# Создаем экземпляр интерфейса
-#crud = CRUDInterface()
-if __name__ == "__main__":
-    # Тестовый tg_id пользователя
-    test_user_tg_id = 123456789
-
-    # Вызов функции для получения истории запросов
-    history_data = _retrieve_search_history(test_user_tg_id)
-
-    # Вывод результата
-    if history_data:
-        print("История запросов пользователя:")
-        for entry in history_data:
-            print(f"""
-            ID записи: {entry['id_his']}
-            Город: {entry['city']}
-            Ссылка на бронирование: {entry['booking_url']}
-            Описание: {entry['description']}
-            Дата заезда: {entry['check_in_date']}
-            Дата выезда: {entry['check_out_date']}
-            Цена: {entry['price']}
-            Фотографии: {entry['photo']}
-            Координаты: Широта - {entry['latitude']}, Долгота - {entry['longitude']}
-            Дата запроса: {entry['created_at']}
-            ---""")
-    else:
-        print("История запросов пуста или произошла ошибка.")

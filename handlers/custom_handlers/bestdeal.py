@@ -1,4 +1,4 @@
-from handlers.custom_handlers.common import search_with_filter
+from handlers.custom_handlers.common import searchWithFilter
 import logging
 from loader import bot
 
@@ -17,7 +17,7 @@ def bestdeal(message):
         sort_by = "distance"
 
         # Вызываем обработчик команды /search, передавая дополнительный параметр
-        search_with_filter(message, sort_by=sort_by)
+        searchWithFilter(message, sort_by=sort_by)
 
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")

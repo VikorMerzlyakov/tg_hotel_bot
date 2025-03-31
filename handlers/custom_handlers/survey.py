@@ -1,11 +1,13 @@
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
-from keyboards.reply.contact import dynamic_keyboard
+from keyboards.reply.contact import dynamicKeyboard
 from loader import bot
 from states.contact_information import UserInfoState
 from telebot.types import Message, CallbackQuery
 from datetime import datetime, timedelta
 from database.core import crud  # Импортируем CRUD для работы с базой данных
-from tg_API.core import get_destinations
+from tg_API.core import getDestinations
+from database.utils.CRUD import CRUDInterface
+
 
 # Команда /survey для начала опроса
 @bot.message_handler(commands=['survey'])
@@ -14,7 +16,7 @@ def survey(message: Message) -> None:
     telegram_id = message.from_user.id
 
     # Проверяем, зарегистрирован ли пользователь
-    users = crud.retrieve_users()()
+    users = crud.retrieveUsers()()
     user = next((u for u in users if u['id_tg'] == telegram_id), None)
 
     if not user:
@@ -27,12 +29,13 @@ def survey(message: Message) -> None:
 
     # Если пользователь зарегистрирован, продолжаем обработку
     bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
-    bot.send_message(message.from_user.id, f'Привет, {message.from_user.username}, введи город (латинскими буквами) для поиска отеля')
+    bot.send_message(message.from_user.id,
+                     f'Привет, {message.from_user.username}, введи город (латинскими буквами) для поиска отеля')
 
 
 # Обработчик для получения города
 @bot.message_handler(state=UserInfoState.city)
-def get_city(message: Message):
+def getCity(message: Message):
     """
     Обработчик ввода названия города.
     """
@@ -47,14 +50,14 @@ def get_city(message: Message):
     # Получаем список доступных локаций для города
     city_name = message.text.strip()
     try:
-        locations = get_destinations(city_name)
+        locations = getDestinations(city_name)
 
         if not locations:
             bot.send_message(message.chat.id, "Для данного города нет доступных локаций.")
             return
 
         # Создаем клавиатуру с доступными локациями
-        keyboard = dynamic_keyboard(locations)
+        keyboard = dynamicKeyboard(locations)
 
         # Отправляем клавиатуру пользователю
         bot.send_message(
@@ -70,7 +73,7 @@ def get_city(message: Message):
 
 # Обработчик выбора локации
 @bot.message_handler(state=UserInfoState.local)
-def get_local(message: Message):
+def getLocal(message: Message):
     """
     Обработчик выбора локации.
     """
@@ -82,7 +85,7 @@ def get_local(message: Message):
             return
 
         # Получаем список доступных локаций для города
-        valid_locations = get_destinations(city_name)
+        valid_locations = getDestinations(city_name)
 
     if message.text not in valid_locations:
         bot.send_message(message.chat.id, "Пожалуйста, выберите локацию из предложенных вариантов.")
@@ -108,7 +111,7 @@ def get_local(message: Message):
 
 # Обработка callback-запроса для даты заезда
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkin)
-def process_date_checkin(call: CallbackQuery):
+def processDateCheckin(call: CallbackQuery):
     result, key, step = DetailedTelegramCalendar(min_date=datetime.now().date()).process(call.data)
 
     if not result and key:
@@ -147,7 +150,7 @@ def process_date_checkin(call: CallbackQuery):
 
 # Обработка callback-запроса для даты выселения
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func(), state=UserInfoState.date_checkout)
-def process_date_checkout(call: CallbackQuery):
+def processDateCheckout(call: CallbackQuery):
     with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
         check_in_date = datetime.strptime(data['date_checkin'], "%d.%m.%Y").date()
 
@@ -179,7 +182,7 @@ def process_date_checkout(call: CallbackQuery):
 
 
 @bot.message_handler(state=UserInfoState.low_price)
-def get_low_price(message: Message) -> None:
+def getLowPrice(message: Message) -> None:
     if message.text.isdigit():
         low_price = int(message.text)
 
@@ -193,13 +196,12 @@ def get_low_price(message: Message) -> None:
 
 
 @bot.message_handler(state=UserInfoState.high_price)
-def get_high_price(message: Message) -> None:
+def getHighPrice(message: Message) -> None:
     if message.text.isdigit():
         high_price = int(message.text)
 
-        #with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-         #   data['low_price'] = low_price
-
+        # with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        #   data['low_price'] = low_price
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             low_price = data['low_price']
@@ -219,7 +221,7 @@ def get_high_price(message: Message) -> None:
                 bot.send_message(message.from_user.id, text)
 
                 # Сохраняем данные в базу данных
-                from database.utils.CRUD import CRUDInterface
+
                 crud = CRUDInterface()
                 store_data = crud.create()
 
@@ -233,7 +235,6 @@ def get_high_price(message: Message) -> None:
                     'low_price': data['low_price'],
                     'high_price': data['high_price']
                 })
-
 
                 # Предлагаем пользователю продолжить взаимодействие
                 bot.send_message(

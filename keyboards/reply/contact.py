@@ -1,7 +1,7 @@
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def dynamic_keyboard(options: list) -> ReplyKeyboardMarkup:
+def dynamicKeyboard(options: list) -> ReplyKeyboardMarkup:
     """
     Создает динамическую клавиатуру на основе переданных опций.
 
@@ -13,7 +13,8 @@ def dynamic_keyboard(options: list) -> ReplyKeyboardMarkup:
         keyboard.add(KeyboardButton(option))
     return keyboard
 
-def create_date_keyboard(dates):
+
+def createDateKeyboard(dates):
     """
     Создает инлайн-клавиатуру с уникальными датами для выбора.
 

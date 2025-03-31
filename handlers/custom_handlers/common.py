@@ -1,12 +1,12 @@
 from datetime import datetime
 from telebot.types import InputMediaPhoto
 from loader import bot
-from tg_API.core import display_hotel_info  # Импортируем функцию для работы с API
+from tg_API.core import displayHotelInfo  # Импортируем функцию для работы с API
 import logging
 from database.core import crud
 
 
-def search_with_filter(message, sort_by=None, categories_filter=None):
+def searchWithFilter(message, sort_by=None, categories_filter=None):
     """
     Переадресация запроса в search.py с добавлением фильтра.
     Может отправлять либо sort_by, либо categories_filter.
@@ -16,7 +16,7 @@ def search_with_filter(message, sort_by=None, categories_filter=None):
         telegram_id = message.from_user.id
 
         # Подключение к базе данных и проверка истории запросов
-        history_records = retrieve_history_for_rating(telegram_id)
+        history_records = retrieveHistoryForRating(telegram_id)
 
         if not history_records:
             bot.send_message(message.chat.id, "У вас нет записей в истории. Пожалуйста, пройдите опрос о поиске отеля.")
@@ -39,7 +39,7 @@ def search_with_filter(message, sort_by=None, categories_filter=None):
         local = last_record['location']
 
         # Добавляем фильтр в запрос
-        hotels_data = display_hotel_info(
+        hotels_data = displayHotelInfo(
             city_name=city,
             local=local,
             arrival_date=arrival,
@@ -49,21 +49,21 @@ def search_with_filter(message, sort_by=None, categories_filter=None):
         )
 
         # Сохраняем данные в БД и отправляем результат пользователю
-        handle_hotel_results(message, hotels_data, telegram_id)
+        handleHotelResults(message, hotels_data, telegram_id)
 
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")
         bot.send_message(message.chat.id, "Произошла ошибка при выполнении запроса. Пожалуйста, попробуйте позже.")
 
 
-def retrieve_history_for_rating(telegram_id):
+def retrieveHistoryForRating(telegram_id):
     """
     Получение истории запросов для команды.
     """
-    return crud.retrieve_history_by_tg_id()(telegram_id)
+    return crud.retrieveHistoryByTgId()(telegram_id)
 
 
-def handle_hotel_results(message, hotels_data, telegram_id):
+def handleHotelResults(message, hotels_data, telegram_id):
     """
     Обработка результатов запроса и отправка их пользователю.
     Результаты отправляются в виде альбома с 10 фотографиями и подписью к первой фотографии.
@@ -74,8 +74,8 @@ def handle_hotel_results(message, hotels_data, telegram_id):
         return
 
     # Сохраняем данные в БД
-    from database.core import crud
-    crud.save_hotel_info_to_db(telegram_id, hotels_data)
+
+    crud.saveHotelInfoToDb(telegram_id, hotels_data)
 
     # Отправляем результаты пользователю
     for hotel in hotels_data:

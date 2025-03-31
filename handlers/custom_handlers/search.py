@@ -1,7 +1,7 @@
 from loader import bot
 from database.core import crud  # Импортируем интерфейс CRUD
 from database.common.models import db, History, User  # Модели базы данных
-from tg_API.core import display_hotel_info  # Импортируем функцию для работы с API
+from tg_API.core import displayHotelInfo  # Импортируем функцию для работы с API
 import logging
 from datetime import datetime
 from telebot.types import InputMediaPhoto  # Для создания медиа-группы
@@ -34,7 +34,7 @@ def search(message):
             logging.info("Таблицы успешно созданы.")
 
         # Проверка наличия пользователя в таблице users
-        users = crud.retrieve_users()()
+        users = crud.retrieveUsers()()
         user = next((u for u in users if u['id_tg'] == telegram_id), None)
 
         if not user:
@@ -45,7 +45,7 @@ def search(message):
         logging.info(f"Пользователь с Telegram ID {telegram_id} найден.")
 
         # Получение истории запросов для пользователя
-        history_records = crud.retrieve_history_by_tg_id()(telegram_id)
+        history_records = crud.retrieveHistoryByTgId()(telegram_id)
 
         if not history_records:
             bot.send_message(message.chat.id, "У вас нет записей в истории. Пожалуйста, пройдите опрос о поиске отеля.")
@@ -64,18 +64,17 @@ def search(message):
             departure = datetime.strptime(check_out_date_str, "%d.%m.%Y").strftime("%Y-%m-%d")
 
             price_min = last_record['low_price']
-            price_max= last_record['high_price']
+            price_max = last_record['high_price']
             # Формирование данных для запроса к API
             city = last_record['city']
             local = last_record['location']
 
             # Отправка запроса в API
             logging.info(f"Отправка запроса в API: город={city}, дата заезда={arrival}, дата выезда={departure}")
-            hotels_data = display_hotel_info(city, local, arrival, departure, price_min, price_max)
-
+            hotels_data = displayHotelInfo(city, local, arrival, departure, price_min, price_max)
 
             # Сохраняем данные в БД перед отправкой сообщений
-            crud.save_hotel_info_to_db(telegram_id, hotels_data)
+            crud.saveHotelInfoToDb(telegram_id, hotels_data)
 
             if not hotels_data:
                 logging.warning(
@@ -96,7 +95,7 @@ def search(message):
                 )
 
                 # Отправляем текстовое сообщение с информацией об отеле
-                #bot.send_message(message.chat.id, hotel_info)
+                # bot.send_message(message.chat.id, hotel_info)
 
                 if hotel['photos']:
                     media_group = []

@@ -43,19 +43,19 @@ class History(BaseModel):
         table_name = 'history'
 
 
-class History_search(BaseModel):
+class HistorySearch(BaseModel):
     id_his = AutoField(primary_key=True)
     user_tg_id = IntegerField(index=True, null=True)  # Добавляем индекс
     created_at = DateTimeField(default=datetime.now)
     city = CharField()
-    booking_url= CharField()
-    description= CharField()
+    booking_url = CharField()
+    description = CharField()
     check_in_date = CharField()
     check_out_date = CharField()
     price = CharField()
     photo = TextField()
     latitude = CharField()
-    longitude= CharField()
+    longitude = CharField()
 
     class Meta:
         table_name = 'history_search'

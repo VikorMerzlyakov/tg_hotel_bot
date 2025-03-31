@@ -2,7 +2,7 @@ import logging
 from loader import bot
 from telebot.types import Message, CallbackQuery, InputMediaPhoto
 from database.core import crud  # Импортируем CRUD для работы с базой данных
-from keyboards.reply.contact import create_date_keyboard  # Импортируем клавиатуру
+from keyboards.reply.contact import createDateKeyboard  # Импортируем клавиатуру
 
 
 # Команда /history для просмотра истории запросов
@@ -20,7 +20,7 @@ def history(message: Message) -> None:
 
         # Получаем историю запросов пользователя через CRUD
         logging.info(f"Запрос истории запросов для пользователя {telegram_id}")
-        history_data = crud.retrieve_search_history(telegram_id)
+        history_data = crud.retrieveSearchHistory(telegram_id)
 
         if not history_data:
             # Если история пуста или пользователь не зарегистрирован, уведомляем пользователя
@@ -44,7 +44,7 @@ def history(message: Message) -> None:
         bot.send_message(
             message.chat.id,
             "Выберите дату для просмотра истории запросов:",
-            reply_markup=create_date_keyboard(unique_dates)
+            reply_markup=createDateKeyboard(unique_dates)
         )
 
     except Exception as e:
@@ -57,7 +57,7 @@ def history(message: Message) -> None:
 
 # Обработчик нажатий на кнопки дат
 @bot.callback_query_handler(func=lambda call: call.data.startswith("history_date:"))
-def handle_date_selection(call: CallbackQuery):
+def handleDateSelection(call: CallbackQuery):
     """
     Обрабатывает выбор даты из клавиатуры.
 
@@ -70,7 +70,7 @@ def handle_date_selection(call: CallbackQuery):
         logging.info(f"Пользователь {telegram_id} выбрал дату: {selected_date}")
 
         # Получаем историю запросов за выбранную дату
-        history_data = crud.retrieve_search_history_by_date(telegram_id, selected_date)
+        history_data = crud.retrieveSearchHistoryByDate(telegram_id, selected_date)
 
         if not history_data:
             bot.send_message(call.message.chat.id, f"За дату {selected_date} записей не найдено.")
@@ -80,7 +80,7 @@ def handle_date_selection(call: CallbackQuery):
 
         # Отправляем каждую запись из истории
         for entry in history_data:
-            formatted_entry = format_single_entry(entry)
+            formatted_entry = formatSingleEntry(entry)
 
             # Извлекаем фотографии из записи
             photos = entry.get("photo", [])
@@ -112,7 +112,7 @@ def handle_date_selection(call: CallbackQuery):
         )
 
 
-def format_single_entry(entry: dict) -> str:
+def formatSingleEntry(entry: dict) -> str:
     """
     Форматирует одну запись из истории запросов для удобочитаемого вывода.
 

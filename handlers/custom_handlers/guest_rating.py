@@ -1,4 +1,4 @@
-from handlers.custom_handlers.common import search_with_filter
+from handlers.custom_handlers.common import searchWithFilter
 import logging
 from loader import bot
 
@@ -17,7 +17,7 @@ def guest_rating(message):
         categories_filter = "reviewscorebuckets::80"
 
         # Вызываем обработчик команды /search, передавая дополнительный параметр
-        search_with_filter(message, categories_filter=categories_filter)
+        searchWithFilter(message, categories_filter=categories_filter)
 
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")

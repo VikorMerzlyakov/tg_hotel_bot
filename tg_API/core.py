@@ -1,12 +1,18 @@
-import re
+import logging
 import requests
-import json
-from database.core import crud
 from config_data.config import URL_DEST, URL_PHOTO, URL_HOTEL, HEADERS, URL_DETAILS
 from typing import Dict
 
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Формат сообщений
+    handlers=[logging.StreamHandler()]  # Вывод логов в консоль
+)
 headers = HEADERS
-def get_destinations(city_name: str) -> list:
+
+
+def getDestinations(city_name: str) -> list:
     """
     Отправляет запрос к API для получения списка dest_id и их типов для указанного города.
 
@@ -33,17 +39,8 @@ def get_destinations(city_name: str) -> list:
     else:
         raise Exception(f"Ошибка при запросе к API: {response.status_code}")
 
-import logging
-import requests
 
-# Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format="%(asctime)s - %(levelname)s - %(message)s",  # Формат сообщений
-    handlers=[logging.StreamHandler()]  # Вывод логов в консоль
-)
-
-def search_destination_id(city_name: str, local: str):
+def searchDestinationId(city_name: str, local: str):
     """
     Функция для получения dest_id по названию города и типу локации (dest_type).
 
@@ -87,7 +84,8 @@ def search_destination_id(city_name: str, local: str):
         logging.error(f"Произошла ошибка: {e}")
         return None
 
-def get_hotel_photos(hotel_id):
+
+def getHotelPhotos(hotel_id):
     """
     Функция для получения фотографий отеля по hotel_id.
 
@@ -97,8 +95,6 @@ def get_hotel_photos(hotel_id):
     url = URL_PHOTO  # Замените на реальный URL API
 
     querystring = {"hotel_id": hotel_id}
-
-
 
     try:
         # Отправляем GET-запрос к API
@@ -117,7 +113,7 @@ def get_hotel_photos(hotel_id):
             # Убираем дубликаты, если они есть
             unique_photo_urls = list(set(photo_urls))
 
-            #print(f"Получено {len(unique_photo_urls)} уникальных фотографий для отеля с ID {hotel_id}.")
+            # print(f"Получено {len(unique_photo_urls)} уникальных фотографий для отеля с ID {hotel_id}.")
             return unique_photo_urls
         else:
             print(f"Ошибка при запросе к API: {response.status_code}")
@@ -126,8 +122,9 @@ def get_hotel_photos(hotel_id):
         print(f"Произошла ошибка: {e}")
         return []
 
-def get_hotel_details(hotel_id, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
-                      currency_code="USD"):
+
+def getHotelDetails(hotel_id, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
+                    currency_code="USD"):
     """
     Функция для получения деталей отеля, включая ссылку на бронирование и описание.
 
@@ -168,7 +165,7 @@ def get_hotel_details(hotel_id, arrival_date, departure_date, adults=1, children
         return {}
 
 
-def find_booking_url(data: dict) -> str:
+def findBookingUrl(data: dict) -> str:
     """
     Рекурсивная функция для поиска ключа 'url' в ответе API.
 
@@ -179,18 +176,18 @@ def find_booking_url(data: dict) -> str:
         for key, value in data.items():
             if key == "url":  # Если найден ключ 'url'
                 return value
-            result = find_booking_url(value)  # Рекурсивный вызов для значения
+            result = findBookingUrl(value)  # Рекурсивный вызов для значения
             if result:  # Если результат найден
                 return result
     elif isinstance(data, list):  # Если данные — список
         for item in data:
-            result = find_booking_url(item)  # Рекурсивный вызов для каждого элемента
+            result = findBookingUrl(item)  # Рекурсивный вызов для каждого элемента
             if result:  # Если результат найден
                 return result
     return ""  # Если ключ 'url' не найден
 
 
-def extract_description(data: Dict) -> str:
+def extractDescription(data: Dict) -> str:
     """
     Рекурсивная функция для поиска ключа 'top_ufi_benefits' и извлечения значений ключей "translated_name".
 
@@ -199,7 +196,7 @@ def extract_description(data: Dict) -> str:
     """
     description = []
 
-    def find_translated_names(data):
+    def findTranslatedNames(data):
         """
         Вспомогательная рекурсивная функция для поиска ключей "translated_name".
         """
@@ -210,17 +207,18 @@ def extract_description(data: Dict) -> str:
                         if isinstance(benefit, dict) and "translated_name" in benefit:  # Ищем "translated_name"
                             description.append(benefit["translated_name"])
                 else:
-                    find_translated_names(value)  # Рекурсивный вызов для значения
+                    findTranslatedNames(value)  # Рекурсивный вызов для значения
         elif isinstance(data, list):  # Если данные — список
             for item in data:
-                find_translated_names(item)  # Рекурсивный вызов для каждого элемента
+                findTranslatedNames(item)  # Рекурсивный вызов для каждого элемента
 
-    find_translated_names(data)  # Запускаем рекурсивный поиск
+    findTranslatedNames(data)  # Запускаем рекурсивный поиск
     return ", ".join(description)  # Объединяем найденные значения в строку через запятую
 
 
-def display_hotel_info(city_name, local, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
-                       currency_code="USD", user_tg_id=None, categories_filter=None, sort_by=None, price_min=None, price_max=None):
+def displayHotelInfo(city_name, local, arrival_date, departure_date, adults=1, children_age="0", room_qty=1,
+                     currency_code="USD", user_tg_id=None, categories_filter=None, sort_by=None, price_min=None,
+                     price_max=None):
     """
     Функция для объединения данных из всех функций и сохранения их в список словарей.
     Добавлены необязательные параметры sort_by и цены (price_min, price_max).
@@ -241,7 +239,7 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, adults=1,
     :return: Список словарей с данными об отелях.
     """
     # Получаем dest_id и search_type для города
-    destination = search_destination_id(city_name, local)
+    destination = searchDestinationId(city_name, local)
     if not destination:
         print("Не удалось найти информацию о городе.")
         return []
@@ -303,13 +301,13 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, adults=1,
                 }
 
                 # Получаем детали отеля
-                details = get_hotel_details(hotel_id, arrival_date, departure_date, adults, children_age, room_qty,
-                                            currency_code)
-                booking_url = find_booking_url(details)
-                description = extract_description(details)
+                details = getHotelDetails(hotel_id, arrival_date, departure_date, adults, children_age, room_qty,
+                                          currency_code)
+                booking_url = findBookingUrl(details)
+                description = extractDescription(details)
 
                 # Получаем фотографии отеля через функцию get_hotel_photos
-                photos = get_hotel_photos(hotel_id)[:10]  # Показываем первые 10 фото
+                photos = getHotelPhotos(hotel_id)[:10]  # Показываем первые 10 фото
 
                 # Создаем словарь с данными об отеле
                 hotel_data = {
@@ -335,15 +333,3 @@ def display_hotel_info(city_name, local, arrival_date, departure_date, adults=1,
     except Exception as e:
         print(f"Произошла ошибка: {e}")
         return []
-
-if __name__ == "__main__":
-    city = "Paris"
-    local = "city"
-    arrival = "2025-05-23"
-    departure = "2025-05-30"
-    min = 1000
-    max = 10000
-    hotels_data = display_hotel_info(city, local, arrival, departure, min, max)
-
-    for hotels in hotels_data:
-        print(hotels)

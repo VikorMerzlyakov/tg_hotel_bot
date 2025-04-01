@@ -39,7 +39,7 @@ Python 3.10+.<br><br>
 <br><br>
 🚀 Установка и запуск <br>
 1. Клонирование репозитория<br>
-git clone https://gitlab.skillbox.ru/viktor_merzliakov/python_basic_diploma.git<br>
+git clone https://github.com/VikorMerzlyakov/tg_hotel_bot.git<br>
 
 
 2. Создание виртуального окружения<br><br>
